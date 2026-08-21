@@ -87,3 +87,13 @@ for (const file of eventFiles) {
 }
 
 client.login(TOKEN);
+import http from 'http';
+
+// Tạo Web Server đơn giản cho Render / UptimeRobot
+const PORT = process.env.PORT || 3000;
+http.createServer((req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('Bot is alive!');
+}).listen(PORT, () => {
+    console.log(`[Web Server] Listening on port ${PORT}`);
+});
