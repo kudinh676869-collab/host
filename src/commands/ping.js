@@ -1,7 +1,7 @@
 // : ! Synora 乂 Development !
 // + Discord: its2yashpatel_
-// + Community: https://dsc.gg/synoraxdev (Synora 乂 Development)
-// + for any queries reach out Community or DM me.
+// + Cộng đồng: https://dsc.gg/synoraxdev (Synora 乂 Development)
+// + Nếu có thắc mắc, hãy liên hệ qua Cộng đồng hoặc DM tôi.
 
 import {
   SlashCommandBuilder,
@@ -16,10 +16,10 @@ import {
 import { getEmoji } from '../handlers/emoji.js';
 
 function statusLabel(ws) {
-  if (ws < 80)  return { text: 'Blazing fast — no complaints here', color: 0x57F287 };
-  if (ws < 150) return { text: 'Solid connection, all good', color: 0x57F287 };
-  if (ws < 250) return { text: 'A little sluggish, but holding up', color: 0xFEE75C };
-  return { text: 'Running hot — might be a hiccup', color: 0xED4245 };
+  if (ws < 80)  return { text: 'Siêu nhanh — không có gì phải phàn nàn', color: 0x57F287 };
+  if (ws < 150) return { text: 'Kết nối ổn định, mọi thứ đều tốt', color: 0x57F287 };
+  if (ws < 250) return { text: 'Hơi chậm một chút, nhưng vẫn ổn', color: 0xFEE75C };
+  return { text: 'Đang quá tải — có thể gặp trục trặc', color: 0xED4245 };
 }
 
 function buildPingCard(ws, rest, avatar) {
@@ -30,7 +30,7 @@ function buildPingCard(ws, rest, avatar) {
     new SectionBuilder()
       .addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
-          `# ${getEmoji('ping')} Latency Check\n-# ${text}`,
+          `# ${getEmoji('ping')} Kiểm tra Độ trễ\n-# ${text}`,
         ),
       )
       .setThumbnailAccessory(new ThumbnailBuilder().setURL(avatar)),
@@ -42,7 +42,7 @@ function buildPingCard(ws, rest, avatar) {
 
   c.addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
-      `${getEmoji('info')} **WebSocket Heartbeat** — \`${ws}ms\`\n${getEmoji('arrow')} **REST Round-trip** — \`${rest}ms\``,
+      `${getEmoji('info')} **Nhịp tim WebSocket** — \`${ws}ms\`\n${getEmoji('arrow')} **Khứ hồi REST** — \`${rest}ms\``,
     ),
   );
 
@@ -52,7 +52,7 @@ function buildPingCard(ws, rest, avatar) {
 
   c.addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
-      `-# ${ws < 150 ? getEmoji('success') + ' All systems nominal' : ws < 250 ? getEmoji('warning') + ' Slight delay detected' : getEmoji('error') + ' Elevated latency — keep an eye on it'}`,
+      `-# ${ws < 150 ? getEmoji('success') + ' Mọi hệ thống đều hoạt động bình thường' : ws < 250 ? getEmoji('warning') + ' Phát hiện độ trễ nhẹ' : getEmoji('error') + ' Độ trễ cao — hãy để mắt tới nó'}`,
     ),
   );
 
@@ -62,7 +62,7 @@ function buildPingCard(ws, rest, avatar) {
 export default {
   data: new SlashCommandBuilder()
     .setName('ping')
-    .setDescription('Check bot latency'),
+    .setDescription('Kiểm tra độ trễ của bot'),
   prefix: 'ping',
 
   async execute(interaction) {
@@ -86,5 +86,5 @@ export default {
 
 // : ! Synora 乂 Development !
 // + Discord: its2yashpatel_
-// + Community: https://dsc.gg/synoraxdev (Synora 乂 Development)
-// + for any queries reach out Community or DM me.
+// + Cộng đồng: https://dsc.gg/synoraxdev (Synora 乂 Development)
+// + Nếu có thắc mắc, hãy liên hệ qua Cộng đồng hoặc DM tôi.
