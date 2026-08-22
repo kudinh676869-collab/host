@@ -155,7 +155,14 @@ function buildQuestSelectCard(quests) {
     return { components: [c], flags: MessageFlags.IsComponentsV2 };
 }
 
-function buildQuestInfoCard(quest, phase, claimed = 0, failReason = '') {
+// Hàm tạo thanh progress dựa trên phần trăm
+function createProgressBar(percent) {
+    const filled = Math.floor(percent / 10);
+    const empty = 10 - filled;
+    return '█'.repeat(filled) + '░'.repeat(empty);
+}
+
+function buildQuestInfoCard(quest, phase, claimed = 0, failReason = '', progress = 0) {
     const cfg  = quest.config;
     const msgs = cfg.messages;
     const appId = cfg.application.id;
@@ -192,21 +199,46 @@ function buildQuestInfoCard(quest, phase, claimed = 0, failReason = '') {
     const expiresEpoch = Math.floor(new Date(cfg.expires_at).getTime() / 1000);
     const daysLeft = Math.max(0, Math.ceil((new Date(cfg.expires_at).getTime() - Date.now()) / 86400000));
 
+    // Xác định phần trăm và thanh progress dựa trên tiến độ thực tế
+    let displayPercent = 0;
+    let progressBar = '`░░░░░░░░░░`';
+    let progressText = '';
+
+    if (phase === 'starting') {
+        displayPercent = Math.min(100, Math.max(0, progress));
+        const bar = createProgressBar(displayPercent);
+        progressBar = `\`${bar}\``;
+        progressText = `${progressBar}  **${displayPercent}%**`;
+        if (displayPercent > 0 && displayPercent < 100) {
+            progressText += `  —  *Đang tiến hành...*`;
+        } else if (displayPercent === 0) {
+            progressText += `  —  *Đang khởi tạo...*`;
+        }
+    } else if (phase === 'done') {
+        progressBar = '`██████████`';
+        progressText = `${progressBar}  **100%**  ✅`;
+    } else if (phase === 'failed') {
+        progressBar = '`░░░░░░░░░░`';
+        progressText = `${progressBar}  **0%**`;
+        if (failReason) {
+            progressText += `\n\`\`\`\n${failReason.slice(0, 300)}\n\`\`\``;
+        }
+    }
+
     const PHASE = {
-        starting: { color: 0x5865F2, title: '⚙️  Đang xử lý Nhiệm vụ...',  bar: '`░░░░░░░░░░`  **0%**  —  *Đang xử lý...*' },
-        done:     { color: 0x57F287, title: '✅  Nhiệm vụ Hoàn thành!',    bar: '`██████████`  **100%**' },
-        failed:   { color: 0xED4245, title: '❌  Nhiệm vụ Thất bại',       bar: '' },
+        starting: { color: 0x5865F2, title: '⚙️  Đang xử lý Nhiệm vụ...' },
+        done:     { color: 0x57F287, title: '✅  Nhiệm vụ Hoàn thành!' },
+        failed:   { color: 0xED4245, title: '❌  Nhiệm vụ Thất bại' },
     };
 
     const p = PHASE[phase];
-    const progressText = phase === 'failed' && failReason
-        ? `\`░░░░░░░░░░\`  **0%**\n\`\`\`\n${failReason.slice(0, 300)}\n\`\`\``
-        : p.bar;
 
     const footerNote = phase === 'done' && claimed > 0
         ? `-# 🎁 Đã nhận ${claimed} phần thưởng`
-        : phase === 'starting'
+        : phase === 'starting' && displayPercent === 0
         ? `-# Quest Bot  •  Vui lòng đợi...`
+        : phase === 'starting' && displayPercent > 0 && displayPercent < 100
+        ? `-# Quest Bot  •  Đang tiến hành... ${displayPercent}%`
         : phase === 'failed'
         ? `-# Cần hoàn thành thủ công trong ứng dụng Discord`
         : '';
@@ -242,6 +274,47 @@ function buildQuestInfoCard(quest, phase, claimed = 0, failReason = '') {
     return { components: [c], flags: MessageFlags.IsComponentsV2 };
 }
 
+// ── Hàm theo dõi tiến độ từ log ───────────────────────────────────────────────────
+
+function extractProgressFromLog(logMessage) {
+    // Mẫu 1: "Progress: 45%"
+    let match = logMessage.match(/Progress:\s*(\d+)%/i);
+    if (match) return parseInt(match[1]);
+    
+    // Mẫu 2: "45% complete"
+    match = logMessage.match(/(\d+)%\s*complete/i);
+    if (match) return parseInt(match[1]);
+    
+    // Mẫu 3: "Task progress: 45%"
+    match = logMessage.match(/Task\s+progress:\s*(\d+)%/i);
+    if (match) return parseInt(match[1]);
+    
+    // Mẫu 4: "progress 45%"
+    match = logMessage.match(/progress\s*(\d+)%/i);
+    if (match) return parseInt(match[1]);
+    
+    // Mẫu 5: Thời gian đã thực hiện / tổng thời gian
+    match = logMessage.match(/(\d+)\s*\/\s*(\d+)\s*(?:sec|second|s|giây)/i);
+    if (match) {
+        const current = parseInt(match[1]);
+        const total = parseInt(match[2]);
+        if (total > 0) return Math.round((current / total) * 100);
+    }
+    
+    // Mẫu 6: Phần trăm trong dấu ngoặc
+    match = logMessage.match(/\((\d+)%\)/);
+    if (match) return parseInt(match[1]);
+    
+    // Mẫu 7: Chỉ là số phần trăm đơn giản (nhưng phải có % và không phải là từ khóa đặc biệt)
+    match = logMessage.match(/(\d+)%/);
+    if (match) {
+        const val = parseInt(match[1]);
+        if (val >= 0 && val <= 100) return val;
+    }
+    
+    return null;
+}
+
 // ── Trình chạy Nhiệm vụ ──────────────────────────────────────────────────────────
 
 async function runQuestOne(userId, tokenStore, send) {
@@ -275,10 +348,29 @@ async function runQuestOne(userId, tokenStore, send) {
         await selMsg.edit({ components: [], flags: MessageFlags.IsComponentsV2 });
 
         const quest = valid.find((q) => q.id === selectedId);
-        const progressMsg = await send(buildQuestInfoCard(quest, 'starting'));
+        let currentProgress = 0;
+        let lastUpdateTime = 0;
+        const progressMsg = await send(buildQuestInfoCard(quest, 'starting', 0, '', currentProgress));
 
         const logs = [];
-        const log = (m) => { console.log(m); logs.push(m); };
+        const log = (m) => { 
+            console.log(m); 
+            logs.push(m);
+            
+            // Trích xuất tiến độ từ log
+            const progress = extractProgressFromLog(m);
+            if (progress !== null && progress !== currentProgress && progress >= 0 && progress <= 100) {
+                currentProgress = progress;
+                const now = Date.now();
+                // Giới hạn tần suất cập nhật để tránh spam (200ms)
+                if (now - lastUpdateTime > 200) {
+                    lastUpdateTime = now;
+                    const updatedCard = buildQuestInfoCard(quest, 'starting', 0, '', currentProgress);
+                    progressMsg.edit(updatedCard).catch(() => {});
+                }
+            }
+        };
+        
         const questDone = await manager.doingQuest(quest, log);
 
         if (!questDone) {
@@ -313,12 +405,33 @@ async function runQuestAll(userId, tokenStore, send) {
         const valid = manager.filterQuestsValid();
         if (valid.length === 0) { await send(buildNoQuestsCard()); return false; }
 
-        const progressMsgs = await Promise.all(valid.map((q) => send(buildQuestInfoCard(q, 'starting'))));
+        // Khởi tạo progress cho từng quest
+        const progressStates = valid.map(() => 0);
+        const lastUpdateTimes = valid.map(() => 0);
+        const progressMsgs = await Promise.all(valid.map((q, index) => {
+            return send(buildQuestInfoCard(q, 'starting', 0, '', progressStates[index]));
+        }));
 
         const questLogs = valid.map(() => []);
         const questResults = await Promise.allSettled(
             valid.map((quest, i) => {
-                const log = (m) => { console.log(m); questLogs[i].push(m); };
+                const log = (m) => { 
+                    console.log(m); 
+                    questLogs[i].push(m);
+                    
+                    // Trích xuất tiến độ từ log
+                    const progress = extractProgressFromLog(m);
+                    if (progress !== null && progress !== progressStates[i] && progress >= 0 && progress <= 100) {
+                        progressStates[i] = progress;
+                        const now = Date.now();
+                        // Giới hạn tần suất cập nhật để tránh spam
+                        if (now - lastUpdateTimes[i] > 200) {
+                            lastUpdateTimes[i] = now;
+                            const updatedCard = buildQuestInfoCard(quest, 'starting', 0, '', progress);
+                            progressMsgs[i].edit(updatedCard).catch(() => {});
+                        }
+                    }
+                };
                 return manager.doingQuest(quest, log);
             }),
         );
@@ -721,7 +834,20 @@ export async function runAutoquestForUser(userId, quest, tokenStore, discordClie
     const { Quest: Q } = await import('../quest/quest.js');
     const qc = new QC(token);
     const logs = [];
-    const log = (m) => { console.log(`[AutoQuest:${userId}]`, m); logs.push(m); };
+    let currentProgress = 0;
+    let lastUpdateTime = 0;
+    
+    const log = (m) => { 
+        console.log(`[AutoQuest:${userId}]`, m); 
+        logs.push(m);
+        
+        // Trích xuất tiến độ từ log
+        const progress = extractProgressFromLog(m);
+        if (progress !== null && progress !== currentProgress && progress >= 0 && progress <= 100) {
+            currentProgress = progress;
+            // Có thể gửi cập nhật progress nếu cần
+        }
+    };
 
     try {
         const manager = await qc.fetchQuests();
