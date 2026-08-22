@@ -22,12 +22,12 @@ import { TokenStore } from '../quest/tokenStore.js';
 import { enableAutoquest, disableAutoquest, isAutoquestEnabled } from '../quest/autoquestStore.js';
 import { PREFIX } from '../utils/config.js';
 
-// ── TokenStore (shared instance via BOT_TOKEN as secret) ───────────────────
+// ── TokenStore (phiên bản dùng chung qua BOT_TOKEN làm bí mật) ───────────────────
 export function makeTokenStore(secret) {
     return new TokenStore(secret);
 }
 
-// ── Helpers ────────────────────────────────────────────────────────────────
+// ── Hàm trợ giúp ────────────────────────────────────────────────────────────────
 
 function sanitizeToken(raw) {
     return raw.trim()
@@ -41,19 +41,19 @@ function isValidUserToken(token) {
     return token.length >= 50 && /^[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+$/.test(token);
 }
 
-// ── UI Builders (Component V2) ─────────────────────────────────────────────
+// ── Trình tạo giao diện (Component V2) ─────────────────────────────────────────────
 
 function buildLinkModal() {
     const modal = new ModalBuilder()
         .setCustomId('link_token_modal')
-        .setTitle('Link Your Discord Token');
+        .setTitle('Liên kết Token Discord của bạn');
     modal.addComponents(
         new ActionRowBuilder().addComponents(
             new TextInputBuilder()
                 .setCustomId('link_token_input')
-                .setLabel('Your Discord user token')
+                .setLabel('Token người dùng Discord của bạn')
                 .setStyle(TextInputStyle.Short)
-                .setPlaceholder('Paste your token here...')
+                .setPlaceholder('Dán token của bạn vào đây...')
                 .setRequired(true),
         ),
     );
@@ -64,7 +64,7 @@ function buildLinkPrompt() {
     const c = new ContainerBuilder().setAccentColor(0xFEE75C);
     c.addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
-            `# 🔗 Token Required\nYou need to link your Discord token before using quest commands.\n\nClick **Link Token** below — a popup will appear where you can paste your token.\n\n**How to get your token:**\n\`1.\` Open Discord in your **browser** (not the app)\n\`2.\` Press \`Ctrl+Shift+I\` → **Network** tab → filter \`XHR\`\n\`3.\` Send any message, click the request, find \`Authorization\` in headers\n\`4.\` Copy that value and paste it into the popup\n\n> ⚠️ This is your **user token**, NOT your bot token.`,
+            `# 🔗 Cần Token\nBạn cần liên kết token Discord trước khi sử dụng lệnh nhiệm vụ.\n\nNhấn **Liên kết Token** bên dưới — một cửa sổ bật lên sẽ xuất hiện để bạn dán token.\n\n**Cách lấy token của bạn:**\n\`1.\` Mở Discord trong **trình duyệt** (không phải ứng dụng)\n\`2.\` Nhấn \`Ctrl+Shift+I\` → Tab **Network** → lọc \`XHR\`\n\`3.\` Gửi bất kỳ tin nhắn nào, nhấp vào yêu cầu, tìm \`Authorization\` trong headers\n\`4.\` Sao chép giá trị đó và dán vào cửa sổ bật lên\n\n> ⚠️ Đây là **token người dùng** của bạn, KHÔNG phải token bot.`,
         ),
     );
     c.addSeparatorComponents(new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small).setDivider(true));
@@ -72,7 +72,7 @@ function buildLinkPrompt() {
         new ActionRowBuilder().addComponents(
             new ButtonBuilder()
                 .setCustomId('link_prompt')
-                .setLabel('🔗 Link Token')
+                .setLabel('🔗 Liên kết Token')
                 .setStyle(ButtonStyle.Primary),
         ),
     );
@@ -83,7 +83,7 @@ function buildNoQuestsCard() {
     const c = new ContainerBuilder().setAccentColor(0x4F545C);
     c.addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
-            `# 🔍 No Quests Available\nThere are no active, uncompleted quests on your account right now.`,
+            `# 🔍 Không có Nhiệm vụ\nHiện tại không có nhiệm vụ nào đang hoạt động hoặc chưa hoàn thành trên tài khoản của bạn.`,
         ),
     );
     return { components: [c], flags: MessageFlags.IsComponentsV2 };
@@ -93,7 +93,7 @@ function buildExpiredTokenCard() {
     const c = new ContainerBuilder().setAccentColor(0xED4245);
     c.addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
-            `# ❌ Token Expired\nYour saved token was rejected by Discord — it has likely expired.\n\n**Your token has been removed.** Re-link with \`/link\` or \`${PREFIX}link\`.`,
+            `# ❌ Token Hết hạn\nToken đã lưu của bạn bị Discord từ chối — có thể đã hết hạn.\n\n**Token của bạn đã bị xóa.** Liên kết lại với \`/link\` hoặc \`${PREFIX}link\`.`,
         ),
     );
     return { components: [c], flags: MessageFlags.IsComponentsV2 };
@@ -106,8 +106,8 @@ function buildErrorCard(err) {
     c.addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
             is401
-                ? `# ❌ Invalid or Expired Token\nRe-link your token with \`${PREFIX}link\`.`
-                : `# ❌ Error\n${msg.slice(0, 800)}`,
+                ? `# ❌ Token Không hợp lệ hoặc Hết hạn\nLiên kết lại token với \`${PREFIX}link\`.`
+                : `# ❌ Lỗi\n${msg.slice(0, 800)}`,
         ),
     );
     return { components: [c], flags: MessageFlags.IsComponentsV2 };
@@ -124,20 +124,20 @@ function buildQuestSelectCard(quests) {
         const taskKey = Object.keys(tasks)[0] ?? '';
         const icon = ICONS[taskKey] ?? '⚙️';
         const exp = Math.floor(new Date(q.config.expires_at).getTime() / 1000);
-        return `**${i + 1}.** ${icon} **${q.config.messages.quest_name}**\n> *${q.config.messages.game_title}*  •  Expires <t:${exp}:R>`;
+        return `**${i + 1}.** ${icon} **${q.config.messages.quest_name}**\n> *${q.config.messages.game_title}*  •  Hết hạn <t:${exp}:R>`;
     }).join('\n\n');
 
     const c = new ContainerBuilder().setAccentColor(0x5865F2);
     c.addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
-            `# 🎮 ${quests.length} Quest${quests.length !== 1 ? 's' : ''} Available\n${lines}\n\n*Use the dropdown below to pick one.*`,
+            `# 🎮 ${quests.length} Nhiệm vụ Có sẵn\n${lines}\n\n*Sử dụng menu thả xuống bên dưới để chọn một nhiệm vụ.*`,
         ),
     );
     c.addSeparatorComponents(new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small).setDivider(true));
 
     const menu = new StringSelectMenuBuilder()
         .setCustomId(`quest_select_${Date.now()}`)
-        .setPlaceholder('Pick a quest...')
+        .setPlaceholder('Chọn một nhiệm vụ...')
         .addOptions(
             quests.map((q) => {
                 const tasks = (q.config.task_config ?? q.config.task_config_v2)?.tasks ?? {};
@@ -163,29 +163,29 @@ function buildQuestInfoCard(quest, phase, claimed = 0, failReason = '') {
     const thumbUrl = `https://cdn.discordapp.com/app-assets/${appId}/quest-assets/${cfg.assets.game_tile}.png`;
 
     const TASK_META = {
-        PLAY_ON_DESKTOP:       { icon: '🖥️', label: 'Play on Desktop' },
-        WATCH_VIDEO:           { icon: '🎬', label: 'Watch Video' },
-        STREAM_ON_DESKTOP:     { icon: '📺', label: 'Stream on Desktop' },
-        PLAY_ACTIVITY:         { icon: '🎮', label: 'Play Activity' },
-        WATCH_VIDEO_ON_MOBILE: { icon: '📱', label: 'Watch Video on Mobile' },
+        PLAY_ON_DESKTOP:       { icon: '🖥️', label: 'Chơi trên Máy tính' },
+        WATCH_VIDEO:           { icon: '🎬', label: 'Xem Video' },
+        STREAM_ON_DESKTOP:     { icon: '📺', label: 'Phát trực tiếp trên Máy tính' },
+        PLAY_ACTIVITY:         { icon: '🎮', label: 'Chơi Hoạt động' },
+        WATCH_VIDEO_ON_MOBILE: { icon: '📱', label: 'Xem Video trên Điện thoại' },
     };
 
     const taskLines = Object.entries((cfg.task_config ?? cfg.task_config_v2)?.tasks ?? {}).map(([type, task]) => {
         const meta = TASK_META[type] ?? { icon: '⚙️', label: type };
         let dur = '';
         if (type === 'PLAY_ON_DESKTOP' || type === 'STREAM_ON_DESKTOP') {
-            dur = `  •  **${Math.ceil(task.target / 60)} min**`;
+            dur = `  •  **${Math.ceil(task.target / 60)} phút**`;
         } else if (type === 'WATCH_VIDEO' || type === 'WATCH_VIDEO_ON_MOBILE') {
             const s = task.target;
-            dur = s >= 60 ? `  •  **${Math.ceil(s / 60)} min**` : `  •  **${s}s**`;
+            dur = s >= 60 ? `  •  **${Math.ceil(s / 60)} phút**` : `  •  **${s} giây**`;
         }
         return `${meta.icon} ${meta.label}${dur}${phase === 'done' ? '  ✅' : ''}`;
     });
 
     const rewardLines = cfg.rewards_config.rewards.map((r) => {
         let line = `**${r.messages.name}**`;
-        if (r.orb_quantity) line += `  ✦ *(${r.orb_quantity} Orbs)*`;
-        else if (r.quantity) line += `  *(${r.quantity}d Nitro)*`;
+        if (r.orb_quantity) line += `  ✦ *(${r.orb_quantity} Orb)*`;
+        else if (r.quantity) line += `  *(${r.quantity} ngày Nitro)*`;
         return line;
     });
 
@@ -193,9 +193,9 @@ function buildQuestInfoCard(quest, phase, claimed = 0, failReason = '') {
     const daysLeft = Math.max(0, Math.ceil((new Date(cfg.expires_at).getTime() - Date.now()) / 86400000));
 
     const PHASE = {
-        starting: { color: 0x5865F2, title: '⚙️  Solving Quest...',  bar: '`░░░░░░░░░░`  **0%**  —  *Working on it...*' },
-        done:     { color: 0x57F287, title: '✅  Quest Complete!',    bar: '`██████████`  **100%**' },
-        failed:   { color: 0xED4245, title: '❌  Quest Failed',       bar: '' },
+        starting: { color: 0x5865F2, title: '⚙️  Đang xử lý Nhiệm vụ...',  bar: '`░░░░░░░░░░`  **0%**  —  *Đang xử lý...*' },
+        done:     { color: 0x57F287, title: '✅  Nhiệm vụ Hoàn thành!',    bar: '`██████████`  **100%**' },
+        failed:   { color: 0xED4245, title: '❌  Nhiệm vụ Thất bại',       bar: '' },
     };
 
     const p = PHASE[phase];
@@ -204,11 +204,11 @@ function buildQuestInfoCard(quest, phase, claimed = 0, failReason = '') {
         : p.bar;
 
     const footerNote = phase === 'done' && claimed > 0
-        ? `-# 🎁 ${claimed} reward(s) claimed`
+        ? `-# 🎁 Đã nhận ${claimed} phần thưởng`
         : phase === 'starting'
-        ? `-# Quest Bot  •  Please wait...`
+        ? `-# Quest Bot  •  Vui lòng đợi...`
         : phase === 'failed'
-        ? `-# Requires manual completion in the Discord app`
+        ? `-# Cần hoàn thành thủ công trong ứng dụng Discord`
         : '';
 
     const c = new ContainerBuilder().setAccentColor(p.color);
@@ -227,10 +227,10 @@ function buildQuestInfoCard(quest, phase, claimed = 0, failReason = '') {
 
     c.addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
-            `📋 **Task**\n${taskLines.join('\n') || '*Unknown task*'}\n\n` +
-            `📅 **Expires**  <t:${expiresEpoch}:R>  *(${daysLeft}d left)*\n\n` +
-            `📊 **Progress**\n${progressText || '`░░░░░░░░░░`  0%'}\n\n` +
-            `🎁 **Reward**\n${rewardLines.join('\n') || '*No rewards listed*'}`,
+            `📋 **Nhiệm vụ**\n${taskLines.join('\n') || '*Không xác định*'}\n\n` +
+            `📅 **Hết hạn**  <t:${expiresEpoch}:R>  *(${daysLeft} ngày còn)*\n\n` +
+            `📊 **Tiến độ**\n${progressText || '`░░░░░░░░░░`  0%'}\n\n` +
+            `🎁 **Phần thưởng**\n${rewardLines.join('\n') || '*Không có phần thưởng*'}`,
         ),
     );
 
@@ -242,7 +242,7 @@ function buildQuestInfoCard(quest, phase, claimed = 0, failReason = '') {
     return { components: [c], flags: MessageFlags.IsComponentsV2 };
 }
 
-// ── Quest Runners ──────────────────────────────────────────────────────────
+// ── Trình chạy Nhiệm vụ ──────────────────────────────────────────────────────────
 
 async function runQuestOne(userId, tokenStore, send) {
     const token = tokenStore.get(userId);
@@ -267,7 +267,7 @@ async function runQuestOne(userId, tokenStore, send) {
             selectedId = interaction.values[0];
         } catch {
             const c = new ContainerBuilder().setAccentColor(0xED4245);
-            c.addTextDisplayComponents(new TextDisplayBuilder().setContent(`# ⏱️ Timed Out\nNo quest was selected within 60 seconds. Run \`${PREFIX}quest\` again.`));
+            c.addTextDisplayComponents(new TextDisplayBuilder().setContent(`# ⏱️ Hết giờ\nKhông có nhiệm vụ nào được chọn trong 60 giây. Chạy \`${PREFIX}quest\` lại.`));
             await selMsg.edit({ components: [c], flags: MessageFlags.IsComponentsV2 });
             return false;
         }
@@ -282,7 +282,7 @@ async function runQuestOne(userId, tokenStore, send) {
         const questDone = await manager.doingQuest(quest, log);
 
         if (!questDone) {
-            const failReason = logs.filter(l => l.startsWith('[FAIL]')).slice(-2).join('\n') || logs.slice(-3).join('\n') || 'Could not be completed automatically.';
+            const failReason = logs.filter(l => l.startsWith('[FAIL]')).slice(-2).join('\n') || logs.slice(-3).join('\n') || 'Không thể hoàn thành tự động.';
             await progressMsg.edit(buildQuestInfoCard(quest, 'failed', 0, failReason));
             return false;
         }
@@ -330,14 +330,14 @@ async function runQuestAll(userId, tokenStore, send) {
             const idx = valid.indexOf(q);
             const failLogs = questLogs[idx].filter(l => l.startsWith('[FAIL]'));
             const reason = questResults[idx].status === 'rejected'
-                ? questResults[idx].reason?.message ?? 'Unknown error'
-                : failLogs.slice(-2).join('\n') || questLogs[idx].slice(-3).join('\n') || 'Could not be completed automatically.';
+                ? questResults[idx].reason?.message ?? 'Lỗi không xác định'
+                : failLogs.slice(-2).join('\n') || questLogs[idx].slice(-3).join('\n') || 'Không thể hoàn thành tự động.';
             return progressMsgs[idx].edit(buildQuestInfoCard(q, 'failed', 0, reason));
         }));
 
         if (completed.length === 0) {
             const c = new ContainerBuilder().setAccentColor(0xFEE75C);
-            c.addTextDisplayComponents(new TextDisplayBuilder().setContent(`# ⚠️ No Quests Auto-Completed\nAll quests require manual completion via the Discord desktop or mobile app.`));
+            c.addTextDisplayComponents(new TextDisplayBuilder().setContent(`# ⚠️ Không có Nhiệm vụ Tự động Hoàn thành\nTất cả nhiệm vụ yêu cầu hoàn thành thủ công qua ứng dụng Discord trên máy tính hoặc điện thoại.`));
             await send({ components: [c], flags: MessageFlags.IsComponentsV2 });
             return false;
         }
@@ -374,11 +374,11 @@ async function runQuestList(userId, tokenStore, send) {
         if (all.length === 0) { await send(buildNoQuestsCard()); return; }
 
         const TASK_META = {
-            PLAY_ON_DESKTOP:       { icon: '🖥️', label: 'Play on Desktop' },
-            WATCH_VIDEO:           { icon: '🎬', label: 'Watch Video' },
-            STREAM_ON_DESKTOP:     { icon: '📺', label: 'Stream on Desktop' },
-            PLAY_ACTIVITY:         { icon: '🎮', label: 'Play Activity' },
-            WATCH_VIDEO_ON_MOBILE: { icon: '📱', label: 'Watch Video on Mobile' },
+            PLAY_ON_DESKTOP:       { icon: '🖥️', label: 'Chơi trên Máy tính' },
+            WATCH_VIDEO:           { icon: '🎬', label: 'Xem Video' },
+            STREAM_ON_DESKTOP:     { icon: '📺', label: 'Phát trực tiếp trên Máy tính' },
+            PLAY_ACTIVITY:         { icon: '🎮', label: 'Chơi Hoạt động' },
+            WATCH_VIDEO_ON_MOBILE: { icon: '📱', label: 'Xem Video trên Điện thoại' },
         };
 
         for (const q of all.slice(0, 10)) {
@@ -389,26 +389,26 @@ async function runQuestList(userId, tokenStore, send) {
             const expiresEpoch = Math.floor(new Date(cfg.expires_at).getTime() / 1000);
             const daysLeft = Math.max(0, Math.ceil((new Date(cfg.expires_at).getTime() - Date.now()) / 86400000));
 
-            const st = q.isCompleted() ? { color: 0x57F287, icon: '✅', label: 'Completed' }
-                : q.isExpired()        ? { color: 0xED4245, icon: '🔴', label: 'Expired' }
-                : q.isEnrolledQuest()  ? { color: 0xFEE75C, icon: '⏳', label: 'In Progress' }
-                :                        { color: 0x5865F2, icon: '🔵', label: 'Available' };
+            const st = q.isCompleted() ? { color: 0x57F287, icon: '✅', label: 'Đã hoàn thành' }
+                : q.isExpired()        ? { color: 0xED4245, icon: '🔴', label: 'Đã hết hạn' }
+                : q.isEnrolledQuest()  ? { color: 0xFEE75C, icon: '⏳', label: 'Đang tiến hành' }
+                :                        { color: 0x5865F2, icon: '🔵', label: 'Có sẵn' };
 
             const taskLines = Object.entries((cfg.task_config ?? cfg.task_config_v2)?.tasks ?? {}).map(([type, task]) => {
                 const meta = TASK_META[type] ?? { icon: '⚙️', label: type };
                 let dur = '';
-                if (type === 'PLAY_ON_DESKTOP' || type === 'STREAM_ON_DESKTOP') dur = `  •  **${Math.ceil(task.target / 60)} min**`;
+                if (type === 'PLAY_ON_DESKTOP' || type === 'STREAM_ON_DESKTOP') dur = `  •  **${Math.ceil(task.target / 60)} phút**`;
                 else if (type === 'WATCH_VIDEO' || type === 'WATCH_VIDEO_ON_MOBILE') {
                     const s = task.target;
-                    dur = s >= 60 ? `  •  **${Math.ceil(s / 60)} min**` : `  •  **${s}s**`;
+                    dur = s >= 60 ? `  •  **${Math.ceil(s / 60)} phút**` : `  •  **${s} giây**`;
                 }
                 return `${meta.icon} ${meta.label}${dur}`;
             });
 
             const rewardLines = cfg.rewards_config.rewards.map((r) => {
                 let line = `**${r.messages.name}**`;
-                if (r.orb_quantity) line += `  ✦ *(${r.orb_quantity} Orbs)*`;
-                else if (r.quantity) line += `  *(${r.quantity}d Nitro)*`;
+                if (r.orb_quantity) line += `  ✦ *(${r.orb_quantity} Orb)*`;
+                else if (r.quantity) line += `  *(${r.quantity} ngày Nitro)*`;
                 return line;
             });
 
@@ -425,9 +425,9 @@ async function runQuestList(userId, tokenStore, send) {
             c.addSeparatorComponents(new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small).setDivider(true));
             c.addTextDisplayComponents(
                 new TextDisplayBuilder().setContent(
-                    `📊 **Status:** ${st.label}   📅 **Expires:** <t:${expiresEpoch}:R> *(${daysLeft}d)*\n\n` +
-                    `📋 **Task**\n${taskLines.join('\n') || '*Unknown*'}\n\n` +
-                    `🎁 **Reward**\n${rewardLines.join('\n') || '*No rewards listed*'}`,
+                    `📊 **Trạng thái:** ${st.label}   📅 **Hết hạn:** <t:${expiresEpoch}:R> *(${daysLeft} ngày)*\n\n` +
+                    `📋 **Nhiệm vụ**\n${taskLines.join('\n') || '*Không xác định*'}\n\n` +
+                    `🎁 **Phần thưởng**\n${rewardLines.join('\n') || '*Không có phần thưởng*'}`,
                 ),
             );
             await send({ components: [c], flags: MessageFlags.IsComponentsV2 });
@@ -435,7 +435,7 @@ async function runQuestList(userId, tokenStore, send) {
 
         if (all.length > 10) {
             const c = new ContainerBuilder().setAccentColor(0x4F545C);
-            c.addTextDisplayComponents(new TextDisplayBuilder().setContent(`-# …and **${all.length - 10}** more quest(s) not shown.`));
+            c.addTextDisplayComponents(new TextDisplayBuilder().setContent(`-# …và **${all.length - 10}** nhiệm vụ khác không hiển thị.`));
             await send({ components: [c], flags: MessageFlags.IsComponentsV2 });
         }
 
@@ -449,7 +449,7 @@ async function runTokenCheck(userId, tokenStore, replyFn) {
 
     if (!token) {
         const c = new ContainerBuilder().setAccentColor(0xFEE75C);
-        c.addTextDisplayComponents(new TextDisplayBuilder().setContent(`# No Token Saved\nYou don't have a saved token. Use \`${PREFIX}link\` to save one.`));
+        c.addTextDisplayComponents(new TextDisplayBuilder().setContent(`# Không có Token Đã lưu\nBạn chưa lưu token. Sử dụng \`${PREFIX}link\` để lưu một token.`));
         await replyFn({ components: [c], flags: MessageFlags.IsComponentsV2 });
         return;
     }
@@ -468,8 +468,8 @@ async function runTokenCheck(userId, tokenStore, replyFn) {
     c.addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
             valid
-                ? `# ✅ Token is Valid\nLinked as **"${accountName}"**.\n\nYour saved token is working correctly.`
-                : `# ❌ Token Invalid or Expired\nYour saved token was rejected by Discord.\nUse \`${PREFIX}unlink\` then \`${PREFIX}link\` to save a fresh token.`,
+                ? `# ✅ Token Hợp lệ\nĐã liên kết với **"${accountName}"**.\n\nToken đã lưu của bạn đang hoạt động chính xác.`
+                : `# ❌ Token Không hợp lệ hoặc Hết hạn\nToken đã lưu của bạn bị Discord từ chối.\nSử dụng \`${PREFIX}unlink\` sau đó \`${PREFIX}link\` để lưu token mới.`,
         ),
     );
     await replyFn({ components: [c], flags: MessageFlags.IsComponentsV2 });
@@ -480,13 +480,13 @@ async function runAutoquestToggle(userId, tokenStore, replyFn) {
     if (isAutoquestEnabled(userId)) {
         disableAutoquest(userId);
         const c = new ContainerBuilder().setAccentColor(0xFEE75C);
-        c.addTextDisplayComponents(new TextDisplayBuilder().setContent(`# 🤖 Auto-Quest Disabled\nI'll no longer auto-run new quests for you.\nUse \`${PREFIX}autoquest\` again to turn it back on.`));
+        c.addTextDisplayComponents(new TextDisplayBuilder().setContent(`# 🤖 Tự động Nhiệm vụ Đã tắt\nTôi sẽ không tự động chạy các nhiệm vụ mới cho bạn.\nSử dụng \`${PREFIX}autoquest\` lại để bật lại.`));
         await replyFn({ components: [c], flags: MessageFlags.IsComponentsV2 });
         return;
     }
     if (!tokenStore.has(userId)) {
         const c = new ContainerBuilder().setAccentColor(0xED4245);
-        c.addTextDisplayComponents(new TextDisplayBuilder().setContent(`# ❌ No Saved Token\nAuto-Quest needs your Discord user token.\n\n**Use \`${PREFIX}link\` first**, then run \`${PREFIX}autoquest\` again.`));
+        c.addTextDisplayComponents(new TextDisplayBuilder().setContent(`# ❌ Không có Token Đã lưu\nTự động Nhiệm vụ cần token người dùng Discord của bạn.\n\n**Sử dụng \`${PREFIX}link\` trước**, sau đó chạy \`${PREFIX}autoquest\` lại.`));
         await replyFn({ components: [c], flags: MessageFlags.IsComponentsV2 });
         return;
     }
@@ -494,16 +494,16 @@ async function runAutoquestToggle(userId, tokenStore, replyFn) {
     const c = new ContainerBuilder().setAccentColor(0x57F287);
     c.addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
-            `# 🤖 Auto-Quest Enabled!\nEvery new Discord quest that drops will be **auto-completed for you** in the background.\n\nI'll DM you a summary once each quest finishes.\n\nUse \`${PREFIX}autoquest\` again to turn this off.\n\n-# Keep your saved token fresh with \`${PREFIX}tokencheck\`.`,
+            `# 🤖 Tự động Nhiệm vụ Đã bật!\nMỗi nhiệm vụ Discord mới sẽ được **tự động hoàn thành** cho bạn ở nền.\n\nTôi sẽ nhắn tin DM cho bạn tóm tắt sau khi mỗi nhiệm vụ kết thúc.\n\nSử dụng \`${PREFIX}autoquest\` lại để tắt tính năng này.\n\n-# Giữ token đã lưu của bạn tươi mới với \`${PREFIX}tokencheck\`.`,
         ),
     );
     await replyFn({ components: [c], flags: MessageFlags.IsComponentsV2 });
 }
 
-// ── Slash + Prefix exports ─────────────────────────────────────────────────
+// ── Xuất Slash + Prefix ─────────────────────────────────────────────────
 
 export const questCmd = {
-    data: new SlashCommandBuilder().setName('quest').setDescription('Pick and complete one Discord quest'),
+    data: new SlashCommandBuilder().setName('quest').setDescription('Chọn và hoàn thành một nhiệm vụ Discord'),
     prefix: 'quest',
     async execute(interaction, client) {
         const ts = client.tokenStore;
@@ -516,7 +516,7 @@ export const questCmd = {
 };
 
 export const questAllCmd = {
-    data: new SlashCommandBuilder().setName('questall').setDescription('Complete all quests at once'),
+    data: new SlashCommandBuilder().setName('questall').setDescription('Hoàn thành tất cả nhiệm vụ cùng lúc'),
     prefix: 'questall',
     async execute(interaction, client) {
         await interaction.deferReply();
@@ -528,7 +528,7 @@ export const questAllCmd = {
 };
 
 export const questListCmd = {
-    data: new SlashCommandBuilder().setName('questlist').setDescription('List all Discord quests and their status'),
+    data: new SlashCommandBuilder().setName('questlist').setDescription('Liệt kê tất cả nhiệm vụ Discord và trạng thái của chúng'),
     prefix: 'questlist',
     async execute(interaction, client) {
         await interaction.deferReply();
@@ -540,7 +540,7 @@ export const questListCmd = {
 };
 
 export const tokenCheckCmd = {
-    data: new SlashCommandBuilder().setName('tokencheck').setDescription('Check whether your saved Discord token is still valid'),
+    data: new SlashCommandBuilder().setName('tokencheck').setDescription('Kiểm tra token Discord đã lưu còn hợp lệ không'),
     prefix: 'tokencheck',
     async execute(interaction, client) {
         await interaction.deferReply({ flags: 64 });
@@ -552,7 +552,7 @@ export const tokenCheckCmd = {
 };
 
 export const autoquestCmd = {
-    data: new SlashCommandBuilder().setName('autoquest').setDescription('Auto-complete every new quest the moment it drops'),
+    data: new SlashCommandBuilder().setName('autoquest').setDescription('Tự động hoàn thành mọi nhiệm vụ mới ngay khi xuất hiện'),
     prefix: 'autoquest',
     async execute(interaction, client) {
         await interaction.deferReply({ flags: 64 });
@@ -563,10 +563,10 @@ export const autoquestCmd = {
     },
 };
 
-// ── Link / Unlink ──────────────────────────────────────────────────────────
+// ── Liên kết / Hủy liên kết ──────────────────────────────────────────────────────────
 
 export const linkCmd = {
-    data: new SlashCommandBuilder().setName('link').setDescription('Save your Discord token so you never have to enter it again'),
+    data: new SlashCommandBuilder().setName('link').setDescription('Lưu token Discord để không bao giờ phải nhập lại'),
     prefix: 'link',
 
     async execute(interaction, client) {
@@ -590,7 +590,7 @@ export const linkCmd = {
             if (!isValidUserToken(token)) {
                 await sendDM((() => {
                     const c = new ContainerBuilder().setAccentColor(0xED4245);
-                    c.addTextDisplayComponents(new TextDisplayBuilder().setContent(`# ❌ Invalid Token Format\nThat doesn't look like a valid Discord token. Copy the **Authorization** header value exactly.`));
+                    c.addTextDisplayComponents(new TextDisplayBuilder().setContent(`# ❌ Định dạng Token Không hợp lệ\nĐó không phải token Discord hợp lệ. Sao chép chính xác giá trị header **Authorization**.`));
                     return { components: [c], flags: MessageFlags.IsComponentsV2 };
                 })());
                 return;
@@ -609,7 +609,7 @@ export const linkCmd = {
             if (!verifyOk) {
                 await sendDM((() => {
                     const c = new ContainerBuilder().setAccentColor(0xED4245);
-                    c.addTextDisplayComponents(new TextDisplayBuilder().setContent(`# ❌ Token Rejected by Discord\nMake sure you copied the \`Authorization\` header and try again.`));
+                    c.addTextDisplayComponents(new TextDisplayBuilder().setContent(`# ❌ Token Bị Từ chối bởi Discord\nĐảm bảo bạn đã sao chép header \`Authorization\` và thử lại.`));
                     return { components: [c], flags: MessageFlags.IsComponentsV2 };
                 })());
                 return;
@@ -619,7 +619,7 @@ export const linkCmd = {
             const c = new ContainerBuilder().setAccentColor(0x57F287);
             c.addTextDisplayComponents(
                 new TextDisplayBuilder().setContent(
-                    `# ✅ Token Linked!\nLinked as **"${accountName}"**.\n\nYou can now use \`${PREFIX}quest\`, \`${PREFIX}questall\`, and \`${PREFIX}questlist\`.\nTo remove it, use \`${PREFIX}unlink\`.`,
+                    `# ✅ Token Đã Liên kết!\nĐã liên kết với **"${accountName}"**.\n\nBạn có thể sử dụng \`${PREFIX}quest\`, \`${PREFIX}questall\`, và \`${PREFIX}questlist\`.\nĐể xóa nó, sử dụng \`${PREFIX}unlink\`.`,
                 ),
             );
             await sendDM({ components: [c], flags: MessageFlags.IsComponentsV2 });
@@ -631,7 +631,7 @@ export const linkCmd = {
 };
 
 export const unlinkCmd = {
-    data: new SlashCommandBuilder().setName('unlink').setDescription('Remove your saved Discord token'),
+    data: new SlashCommandBuilder().setName('unlink').setDescription('Xóa token Discord đã lưu'),
     prefix: 'unlink',
 
     async execute(interaction, client) {
@@ -642,8 +642,8 @@ export const unlinkCmd = {
         c.addTextDisplayComponents(
             new TextDisplayBuilder().setContent(
                 removed
-                    ? `# 🔓 Token Unlinked\nYour saved token has been removed.`
-                    : `# No Token Saved\nYou don't have a saved token.`,
+                    ? `# 🔓 Token Đã Hủy Liên kết\nToken đã lưu của bạn đã bị xóa.`
+                    : `# Không có Token Đã lưu\nBạn không có token nào được lưu.`,
             ),
         );
         await interaction.reply({ components: [c], flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral });
@@ -657,15 +657,15 @@ export const unlinkCmd = {
         c.addTextDisplayComponents(
             new TextDisplayBuilder().setContent(
                 removed
-                    ? `# 🔓 Token Unlinked\nYour saved token has been removed.`
-                    : `# No Token Saved\nYou don't have a saved token.`,
+                    ? `# 🔓 Token Đã Hủy Liên kết\nToken đã lưu của bạn đã bị xóa.`
+                    : `# Không có Token Đã lưu\nBạn không có token nào được lưu.`,
             ),
         );
         await message.reply({ components: [c], flags: MessageFlags.IsComponentsV2 });
     },
 };
 
-// ── Modal Submit Handler (called from interactionCreate) ───────────────────
+// ── Trình xử lý Gửi Modal (được gọi từ interactionCreate) ───────────────────
 export async function handleLinkModal(interaction, client) {
     const ts = client.tokenStore;
     const raw = interaction.fields.getTextInputValue('link_token_input');
@@ -675,7 +675,7 @@ export async function handleLinkModal(interaction, client) {
 
     if (!isValidUserToken(token)) {
         const c = new ContainerBuilder().setAccentColor(0xED4245);
-        c.addTextDisplayComponents(new TextDisplayBuilder().setContent(`# ❌ Invalid Token Format\nThat doesn't look like a valid Discord token. Copy the **Authorization** header value exactly.`));
+        c.addTextDisplayComponents(new TextDisplayBuilder().setContent(`# ❌ Định dạng Token Không hợp lệ\nĐó không phải token Discord hợp lệ. Sao chép chính xác giá trị header **Authorization**.`));
         await interaction.editReply({ components: [c], flags: MessageFlags.IsComponentsV2 });
         return;
     }
@@ -692,7 +692,7 @@ export async function handleLinkModal(interaction, client) {
 
     if (!verifyOk) {
         const c = new ContainerBuilder().setAccentColor(0xED4245);
-        c.addTextDisplayComponents(new TextDisplayBuilder().setContent(`# ❌ Token Rejected by Discord\nMake sure you copied the \`Authorization\` header and try again.`));
+        c.addTextDisplayComponents(new TextDisplayBuilder().setContent(`# ❌ Token Bị Từ chối bởi Discord\nĐảm bảo bạn đã sao chép header \`Authorization\` và thử lại.`));
         await interaction.editReply({ components: [c], flags: MessageFlags.IsComponentsV2 });
         return;
     }
@@ -701,18 +701,18 @@ export async function handleLinkModal(interaction, client) {
     const c = new ContainerBuilder().setAccentColor(0x57F287);
     c.addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
-            `# ✅ Token Linked!\nLinked as **"${accountName}"**.\n\nYou can now use \`/quest\`, \`/questall\`, and \`/questlist\`.\nTo remove it, use \`/unlink\`.`,
+            `# ✅ Token Đã Liên kết!\nĐã liên kết với **"${accountName}"**.\n\nBạn có thể sử dụng \`/quest\`, \`/questall\`, và \`/questlist\`.\nĐể xóa nó, sử dụng \`/unlink\`.`,
         ),
     );
     await interaction.editReply({ components: [c], flags: MessageFlags.IsComponentsV2 });
 }
 
-// ── Button: link_prompt handler (called from interactionCreate) ────────────
+// ── Trình xử lý Nút: link_prompt (được gọi từ interactionCreate) ────────────
 export async function handleLinkPromptButton(interaction) {
     await interaction.showModal(buildLinkModal());
 }
 
-// ── AutoQuest runner (called from questWatcher) ────────────────────────────
+// ── Trình chạy Tự động Nhiệm vụ (được gọi từ questWatcher) ────────────────────────────
 export async function runAutoquestForUser(userId, quest, tokenStore, discordClient) {
     const token = tokenStore.get(userId);
     if (!token) { disableAutoquest(userId); return; }
@@ -744,7 +744,7 @@ export async function runAutoquestForUser(userId, quest, tokenStore, discordClie
             const c = new ContainerBuilder().setAccentColor(0x57F287);
             c.addTextDisplayComponents(
                 new TextDisplayBuilder().setContent(
-                    `# 🤖 Auto-Quest Complete!\n**${live.config.messages.quest_name}** has been completed automatically.\n${claimed > 0 ? `🎁 **${claimed}** reward(s) claimed.\n` : ''}\nUse \`${PREFIX}autoquest\` to disable.`,
+                    `# 🤖 Tự động Nhiệm vụ Hoàn thành!\n**${live.config.messages.quest_name}** đã được hoàn thành tự động.\n${claimed > 0 ? `🎁 Đã nhận **${claimed}** phần thưởng.\n` : ''}\nSử dụng \`${PREFIX}autoquest\` để tắt.`,
                 ),
             );
             await dm.send({ components: [c], flags: MessageFlags.IsComponentsV2 });
@@ -752,7 +752,7 @@ export async function runAutoquestForUser(userId, quest, tokenStore, discordClie
 
     } catch (err) {
         const msg = err?.message ?? String(err);
-        console.error(`[AutoQuest:${userId}] Error:`, msg);
+        console.error(`[AutoQuest:${userId}] Lỗi:`, msg);
         if (msg.includes('401')) {
             tokenStore.remove(userId);
             disableAutoquest(userId);
@@ -760,7 +760,7 @@ export async function runAutoquestForUser(userId, quest, tokenStore, discordClie
                 const user = await discordClient.users.fetch(userId);
                 const dm = await user.createDM();
                 const c = new ContainerBuilder().setAccentColor(0xED4245);
-                c.addTextDisplayComponents(new TextDisplayBuilder().setContent(`# 🤖 Auto-Quest Paused\nYour saved token expired. Run \`${PREFIX}link\` to re-link, then \`${PREFIX}autoquest\` to re-enable.`));
+                c.addTextDisplayComponents(new TextDisplayBuilder().setContent(`# 🤖 Tự động Nhiệm vụ Tạm dừng\nToken đã lưu của bạn đã hết hạn. Chạy \`${PREFIX}link\` để liên kết lại, sau đó \`${PREFIX}autoquest\` để bật lại.`));
                 await dm.send({ components: [c], flags: MessageFlags.IsComponentsV2 });
             } catch {}
         }
